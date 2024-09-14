@@ -25,8 +25,8 @@ class DQN(nn.Module):
         return x
 
 class DQNAgent:
-    def __init__(self, input_size, output_size, epsilon = 1.0, learning_rate = 0.0005, batch_size = 64):
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def __init__(self, input_size, output_size, epsilon = 1.0, learning_rate = 0.0005, batch_size = 64, device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
+        self.device = device
         self.model = DQN(input_size, output_size).to(self.device)
         self.target_model = DQN(input_size, output_size).to(self.device)
         self.target_model.load_state_dict(self.model.state_dict())

@@ -30,7 +30,7 @@ def train(env, agent, args):
             total_reward += reward
 
             if done:
-                print(f"\n[Episode {episode + 1}/{args.epoch_num}] Epsilon: {agent.epsilon:.8f}, \tTotal Reward: {total_reward}")
+                print(f"[Episode {episode + 1}/{args.epoch_num}] Epsilon: {agent.epsilon:.8f}, \tTotal Reward: {total_reward}")
 
         agent.update_epsilon()
 
@@ -49,11 +49,13 @@ if __name__ == "__main__":
     parser.add_argument('--update_target_frequency', type=int, default=10, help='update target frequency')
     parser.add_argument('--save_model_frequency', type=int, default=1000, help='save model frequency')
     parser.add_argument('--model_path', type=str, default=None, help='load former model')
+    parser.add_argument('--gpu_id', type=int, default=0, help='ID of the GPU to use')
     args = parser.parse_args()
 
+    device = torch.device(f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu")
+
     env = Game2048Env()
-    
-    agent = DQNAgent(input_size=4, output_size=4) # 输入为 4x4 的棋盘，动作为 4 种
+    agent = DQNAgent(input_size = 4, output_size = 4, device = device) # 输入为 4x4 的棋盘，动作为 4 种
     if args.model_path is not None:
         agent.load_state_dict(torch.load(args.model_path))
 
