@@ -43,7 +43,7 @@ class Game2048Env:
             for j in range(self.size - 1):
                 if board[i][j] == board[i][j + 1] and board[i][j] != 0:
                     board[i][j] *= 2
-                    reward += 1
+                    reward += board[i][j]
                     board[i][j + 1] = 0
         return board, reward
 
@@ -109,7 +109,9 @@ class Game2048Env:
         self.done = self.is_game_over()
         if self.done:
             reward -= 100
-            
+
+        reward = self.count_zero()
+
         return self.board, reward, self.done
 
     def get_board(self):
@@ -126,3 +128,6 @@ class Game2048Env:
 
     def render(self):
         print(self.board)
+
+    def count_zero(self):
+        return np.sum(self.board == 0)

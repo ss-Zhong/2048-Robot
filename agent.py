@@ -10,13 +10,13 @@ class DQN(nn.Module):
     def __init__(self, input_size = 4, output_size = 4): 
         super(DQN, self).__init__()
         self.input_size = input_size
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=2, stride=1)
+        self.conv1 = nn.Conv2d(16, 64, kernel_size=2, stride=1)
         self.conv2 = nn.Conv2d(64, 128, kernel_size=2, stride=1)
         self.fc1 = nn.Linear(128 * 2 * 2, 128)
         self.fc2 = nn.Linear(128, output_size)
 
     def forward(self, x):
-        x = x.view(-1, 1, self.input_size, self.input_size)
+        x = x.view(-1, 16, self.input_size, self.input_size)
         x = F.relu(self.conv1(x))
         x = F.relu(self.conv2(x))
         x = x.view(x.size(0), -1)  # 展平
@@ -101,10 +101,9 @@ class DQNAgent:
             (first channel refers for empty tiles) 
         '''
         result = np.zeros((1, 16, 4, 4), dtype=np.float32)
-        print(state.shape)
+
         for i in range(4):
             for j in range(4):
-                print(state[i][j])
                 if state[i][j] == 0:
                     result[0][0][i][j] = 1.0
                 else:

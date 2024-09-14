@@ -44,7 +44,7 @@ def start_bot(game, AI = True):
     """启动机器人线程"""
     if AI:
         agent = DQNAgent(input_size = 4, output_size = 4, epsilon = 0)
-        agent.model.load_state_dict(torch.load("./model/bot_2048_E1000_T1726225658.3483465.pth"))
+        agent.model.load_state_dict(torch.load("./model/bot_2048_E1000_T1726304680.2032425.pth"))
         agent.model.eval()
     else:
         agent = None

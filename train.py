@@ -13,7 +13,7 @@ def train(env, agent, args):
     
     for episode in range(args.epoch_num):
         state = env.reset()
-        state = agent.preprocess_state(state) # 对 state 进行归一化
+        state = agent.one_hot_encode(state) # 对 state 进行归一化
         done = False
         total_reward = 0
 
@@ -21,7 +21,7 @@ def train(env, agent, args):
             action = agent.act(state)
             # print(action, end='')
             next_state, reward, done = env.step(action)
-            next_state = agent.preprocess_state(next_state) # 对 next_state 进行归一化
+            next_state = agent.one_hot_encode(next_state) # 对 next_state 进行归一化
             agent.store_transition(state, action, reward, next_state, done)
 
             agent.train()
