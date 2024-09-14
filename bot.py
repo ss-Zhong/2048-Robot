@@ -18,27 +18,33 @@ class Bot2048:
 
     def choose_direction_rl(self):
         bd = game.get_board()
+        bd = self.agent.preprocess_state(bd)
         action = self.agent.act(bd)
         directions = {0: "Up", 1: "Down", 2: "Left", 3: "Right"}
+        print(f"{directions[action]}  ", end='')
         return directions[action]
 
     def play(self):
         """机器人开始玩游戏"""
         over = 1
         while over != 0:
-            direction = self.choose_direction_rl()
+            if self.agent is None:
+                direction = self.choose_direction_random()
+            else:
+                direction = self.choose_direction_rl()
+
             over = self.game.step(direction)
-            if over == 1:
-                print(f"{direction}  ", end='')
+            # if over == 1:
+            #     print(f"{direction}  ", end='')
 
             time.sleep(0.01)  # 让机器人慢一点，每半秒移动一次
         print("GAME OVER", end='')
 
-def start_bot(game):
+def start_bot(game, AI = True):
     """启动机器人线程"""
-    if True:
+    if AI:
         agent = DQNAgent(input_size = 4, output_size = 4, epsilon = 0)
-        agent.model.load_state_dict(torch.load("./model/bot_2048.pth"))
+        agent.model.load_state_dict(torch.load("./model/bot_2048_E1000_T1726225658.3483465.pth"))
         agent.model.eval()
     else:
         agent = None
@@ -48,9 +54,10 @@ def start_bot(game):
 
 if __name__ == "__main__":
     game = Game2048GUI()  # 创建游戏实例
+    AI = True
 
     # 创建并启动机器人线程
-    bot_thread = threading.Thread(target=start_bot, args=(game,))
+    bot_thread = threading.Thread(target=start_bot, args=(game, AI))
     bot_thread.daemon = True  # 设置为守护线程，以便在主线程结束时自动退出
     bot_thread.start()
 

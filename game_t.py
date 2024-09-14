@@ -14,6 +14,13 @@ class Game2048Env:
         self.add_new_tile()
         self.add_new_tile()
 
+        self.weights = np.array([
+            [255, 127, 63, 63],
+            [11, 15, 17, 19],
+            [0, 0, 0, 0],
+            [-3, -5, -7, -9]
+        ])
+
     def add_new_tile(self):
         empty_cells = list(zip(*np.where(self.board == 0)))
         if empty_cells:
@@ -36,7 +43,7 @@ class Game2048Env:
             for j in range(self.size - 1):
                 if board[i][j] == board[i][j + 1] and board[i][j] != 0:
                     board[i][j] *= 2
-                    reward += board[i][j]
+                    reward += 1
                     board[i][j + 1] = 0
         return board, reward
 
@@ -92,12 +99,17 @@ class Game2048Env:
         elif action == 3:
             reward = self.move_right()
 
+        reward += np.sum((self.board - prev_board) * self.weights)
+
         if np.array_equal(prev_board, self.board):
-            reward = -10  # 惩罚无效动作
+            reward -= 10  # 惩罚无效动作
         else:
             self.add_new_tile()
 
         self.done = self.is_game_over()
+        if self.done:
+            reward -= 100
+            
         return self.board, reward, self.done
 
     def get_board(self):

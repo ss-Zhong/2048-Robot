@@ -16,16 +16,19 @@ class Game2048GUI:
 
         self.root = tk.Tk()
         self.root.title("2048 Game")
-        self.root.configure(bg="#faf8ef")
+        self.root.configure(bg="#000")
 
         self.root.grid_rowconfigure(0, weight=1)
         self.root.grid_columnconfigure(0, weight=1)
 
-        self.outer_frame = tk.Frame(self.root, bg="#bbada0")  # 设置为你想要的padding颜色
+        self.outer_frame = tk.Frame(self.root, bg="#000")  # 设置为你想要的padding颜色
         self.outer_frame.grid(padx=10, pady=10)
 
+        self.score_label = tk.Label(self.outer_frame, text=f"Score: {self.score}", font=("Times New Roman", 24, "bold"), bg="#000", fg="#fff")
+        self.score_label.grid(row=0, column=0, padx=10, pady=10)
+
         # 内部框架，用来放置游戏内容
-        self.grid_frame = tk.Frame(self.outer_frame, bg="#bbada0")  # 实际的游戏框架
+        self.grid_frame = tk.Frame(self.outer_frame, bg="#000")  # 实际的游戏框架
         self.grid_frame.grid(padx=10, pady=10)  # 内部的padding，可以根据需要调整 
 
         self.cells = []
@@ -34,7 +37,7 @@ class Game2048GUI:
             for j in range(self.size):
                 cell_frame = tk.Frame(
                     self.grid_frame,
-                    bg="#cdc1b4",
+                    bg="#1f1f1f",
                     width=100,
                     height=100
                 )
@@ -129,12 +132,14 @@ class Game2048GUI:
             for j in range(self.size):
                 value = self.board[i][j]
                 if value == 0:
-                    self.cells[i][j].config(text="", bg="#cdc1b4")
+                    self.cells[i][j].config(text="", bg="#1f1f1f")
                 else:
                     if value >= 8:
                         self.cells[i][j].config(text=str(value), fg="#f9f6f2", bg=self.get_color(value))
                     else:
                         self.cells[i][j].config(text=str(value), fg="#776e65", bg=self.get_color(value))
+
+        self.score_label.config(text=f"Score: {self.score}")
 
     def get_color(self, value):
         colors = {
@@ -143,7 +148,7 @@ class Game2048GUI:
             128: "#EDCF72", 256: "#EDCC61", 512: "#EDC850",
             1024: "#EDC53F", 2048: "#EDC22E"
         }
-        return colors.get(value, "#CDC1B4")
+        return colors.get(value, "#1f1f1f")
 
     def handle_keypress(self, event):
         key = event.keysym
@@ -163,7 +168,6 @@ class Game2048GUI:
         if changeornot:
             self.add_new_tile()
             self.update_gui()
-            print(self.score)
             if self.is_game_over():
                 if self.bot_mode:
                     print("Game Over!")
@@ -185,10 +189,11 @@ class Game2048GUI:
         self.root.mainloop()
 
     def show_game_over(self):
-        game_over_frame = tk.Frame(self.grid_frame, bg="#e2d6c9")
-        game_over_frame.place(relx=0.5, rely=0.5, anchor="center")
-        game_over_label = tk.Label(game_over_frame, text="Game Over!", font=("Helvetica", 24), fg="#776e65", bg="#e2d6c9")
-        game_over_label.pack()
+        # game_over_frame = tk.Frame(self.grid_frame, bg="#e2d6c9")
+        # game_over_frame.place(relx=0.5, rely=0.5, anchor="center")
+        # game_over_label = tk.Label(game_over_frame, text="Game Over", font=("Times New Roman", 24), fg="#776e65", bg="#e2d6c9")
+        # game_over_label.pack()
+        self.score_label.config(text=f"Score: {self.score}", fg="#ff0000")
 
 if __name__ == "__main__":
     game = Game2048GUI(4)
