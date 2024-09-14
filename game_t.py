@@ -44,6 +44,7 @@ class Game2048Env:
                 if board[i][j] == board[i][j + 1] and board[i][j] != 0:
                     board[i][j] *= 2
                     reward += board[i][j]
+                    self.score += board[i][j]
                     board[i][j + 1] = 0
         return board, reward
 

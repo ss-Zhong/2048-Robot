@@ -11,13 +11,15 @@ import time
 
 def train(env, agent, args):
     
-    for episode in range(args.epoch_num):
+    for episode in tqdm(range(args.epoch_num)):
         state = env.reset()
         state = agent.one_hot_encode(state) # 对 state 进行归一化
         done = False
         total_reward = 0
 
+        step_num = 0
         while not done:
+            
             action = agent.act(state)
             # print(action, end='')
             next_state, reward, done = env.step(action)
@@ -28,9 +30,10 @@ def train(env, agent, args):
 
             state = next_state
             total_reward += reward
+            step_num += 1
 
-            if done:
-                print(f"[Episode {episode + 1}/{args.epoch_num}] Epsilon: {agent.epsilon:.8f}, \tTotal Reward: {total_reward}")
+            # if done:
+            #     print(f"[Episode {episode + 1}/{args.epoch_num}] Epsilon: {agent.epsilon:.8f}, \tTotal Reward: {total_reward}")
 
         agent.update_epsilon()
 
@@ -39,6 +42,10 @@ def train(env, agent, args):
 
         if episode % args.save_model_frequency == 0 and args.save_model_frequency != 0:
             torch.save(agent.model.state_dict(), f"./model/bot_2048_E{episode}_T{time.time()}.pth")
+        
+        if episode % 100 == 0:
+            env.render()
+            print(f'episode {episode} | score {env.score} | steps {step_num}')
 
 if __name__ == "__main__":
 
