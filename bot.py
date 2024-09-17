@@ -18,10 +18,9 @@ class Bot2048:
 
     def choose_direction_rl(self):
         bd = game.get_board()
-        bd = self.agent.preprocess_state(bd)
         action = self.agent.act(bd)
-        directions = {0: "Up", 1: "Down", 2: "Left", 3: "Right"}
-        print(f"{directions[action]}  ", end='')
+        directions = {0: "Left", 1: "Up", 2: "Right", 3: "Down"}
+        # print(f"{directions[action]}  ", end='')
         return directions[action]
 
     def play(self):
@@ -44,7 +43,7 @@ def start_bot(game, AI = True):
     """启动机器人线程"""
     if AI:
         agent = DQNAgent(input_size = 4, output_size = 4, epsilon = 0)
-        agent.model.load_state_dict(torch.load("./model/bot_2048_E1000_T1726304680.2032425.pth"))
+        agent.model.load_state_dict(torch.load("./model/bot_2048_E1000_T20240917_1904.pth"))
         agent.model.eval()
     else:
         agent = None

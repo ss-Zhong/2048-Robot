@@ -86,35 +86,13 @@ class Game2048GUI:
 
         return board, changeornot
 
-    def reverse(self):
-        return np.array([row[::-1] for row in self.board])
-
-    def transpose(self):
-        return np.transpose(self.board)
-
-    def move_left(self):
+    def move(self, action):
+        self.board = np.rot90(self.board, action)
         self.board, changeornot1 = self.compress()
         self.board, changeornot2 = self.merge(self.board)
         self.board, changeornot3 = self.compress()
+        self.board = np.rot90(self.board, -action)
         return (changeornot1 or changeornot2 or changeornot3)
-
-    def move_right(self):
-        self.board = self.reverse()
-        changeornot = self.move_left()
-        self.board = self.reverse()
-        return changeornot
-
-    def move_up(self):
-        self.board = self.transpose()
-        changeornot = self.move_left()
-        self.board = self.transpose()
-        return changeornot
-
-    def move_down(self):
-        self.board = self.transpose()
-        changeornot = self.move_right()
-        self.board = self.transpose()
-        return changeornot
 
     def is_game_over(self):
         if 0 in self.board:
@@ -157,13 +135,13 @@ class Game2048GUI:
     def step(self, direction):
         """机器人通过这个函数发送移动指令"""
         if direction == "Up" or direction == "w":
-            changeornot = self.move_up()
+            changeornot = self.move(1)
         elif direction == "Down" or direction == "s":
-            changeornot = self.move_down()
+            changeornot = self.move(3)
         elif direction == "Left" or direction == "a":
-            changeornot = self.move_left()
+            changeornot = self.move(0)
         elif direction == "Right" or direction == "d":
-            changeornot = self.move_right()
+            changeornot = self.move(2)
 
         if changeornot:
             self.add_new_tile()

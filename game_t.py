@@ -5,21 +5,20 @@ import numpy as np
 import random
 
 class Game2048Env:
-    def __init__(self, size=4, bot_mode=True):
+    def __init__(self, size=4):
         self.size = size
-        self.bot_mode = bot_mode
         self.score = 0
 
         self.board = np.zeros((self.size, self.size), dtype=int)
         self.add_new_tile()
         self.add_new_tile()
 
-        self.weights = np.array([
-            [255, 127, 63, 63],
-            [11, 15, 17, 19],
-            [0, 0, 0, 0],
-            [-3, -5, -7, -9]
-        ])
+        # self.weights = np.array([
+        #     [255, 127, 63, 63],
+        #     [11, 15, 17, 19],
+        #     [0, 0, 0, 0],
+        #     [-3, -5, -7, -9]
+        # ])
 
     def add_new_tile(self):
         empty_cells = list(zip(*np.where(self.board == 0)))
@@ -48,34 +47,14 @@ class Game2048Env:
                     board[i][j + 1] = 0
         return board, reward
 
-    def reverse(self):
-        return np.array([row[::-1] for row in self.board])
+    def move(self, action):
+        self.board = np.rot90(self.board, action)
 
-    def transpose(self):
-        return np.transpose(self.board)
-
-    def move_left(self):
         self.board = self.compress()
         self.board, reward = self.merge(self.board)
         self.board = self.compress()
-        return reward
 
-    def move_right(self):
-        self.board = self.reverse()
-        reward = self.move_left()
-        self.board = self.reverse()
-        return reward
-
-    def move_up(self):
-        self.board = self.transpose()
-        reward = self.move_left()
-        self.board = self.transpose()
-        return reward
-
-    def move_down(self):
-        self.board = self.transpose()
-        reward = self.move_right()
-        self.board = self.transpose()
+        self.board = np.rot90(self.board, -action)
         return reward
 
     def is_game_over(self):
@@ -88,35 +67,47 @@ class Game2048Env:
                 if self.board[j][i] == self.board[j + 1][i]:
                     return False
         return True
+    
+    # def _can_perform(self, action):
+    #     tmp = np.rot90(self.board, action)
+    #     for i in range(4):
+    #         empty = False
+    #         for j in range(4):
+    #             empty |= tmp[i, j] == 0
+    #             if tmp[i, j] != 0 and empty:
+    #                 return True
+    #             if j > 0 and tmp[i, j] != 0 and tmp[i, j] == tmp[i, j-1]:
+    #                 return True
+    #     return False
+    
+    # # returns a list of all possible actions
+    # def possible_actions(self):
+    #     res = []
+    #     for action in range(4):
+    #         if self._can_perform(action):
+    #             res.append(action)
+    #     return res
         
     def step(self, action):
         prev_board = np.copy(self.board)
-        if action == 0:
-            reward = self.move_up()
-        elif action == 1:
-            reward = self.move_down()
-        elif action == 2:
-            reward = self.move_left()
-        elif action == 3:
-            reward = self.move_right()
 
-        reward += np.sum((self.board - prev_board) * self.weights)
+        # 0: left 1: up 2: right 3: down
+        reward = self.move(action)
 
         if np.array_equal(prev_board, self.board):
-            reward -= 10  # 惩罚无效动作
+            # reward -= 10  # 惩罚无效动作
+            pass
         else:
             self.add_new_tile()
 
         self.done = self.is_game_over()
-        if self.done:
-            reward -= 100
+        # if self.done:
+        #     reward -= 100
 
         reward = self.count_zero()
-
         return self.board, reward, self.done
 
     def get_board(self):
-        """返回当前游戏状态的副本"""
         return np.copy(self.board)
 
     def reset(self):
