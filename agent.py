@@ -96,21 +96,16 @@ class DQNAgent:
         self.target_model.load_state_dict(self.model.state_dict())
         self.target_model.eval()
 
-        self.memory = deque(maxlen=50000)
+        self.memory = deque(maxlen=10000) #################################50000
         self.gamma = 0.99  # 折扣因子
         self.epsilon = epsilon  # 探索率
-        self.epsilon_max = 0.1
+        self.epsilon_max = epsilon
         self.epsilon_min = 0.0001
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.step_total = 0
         self.update_target_frequency = update_target_frequency
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-
-    # 对state进行归一化操作
-    def preprocess_state(self, state):
-        state = np.where(state == 0, 1, state)
-        return np.log2(state)
 
     # 保存过去状态
     def store_transition(self, state, action, reward, next_state, done):
@@ -162,22 +157,6 @@ class DQNAgent:
 
         loss = F.mse_loss(q_values.squeeze(), target_q_values)
 
-        # states = torch.FloatTensor(np.array(states)).squeeze(1).to(self.device)
-        # next_states = torch.FloatTensor(np.array(next_states)).squeeze(1).to(self.device)
-        # actions = torch.Tensor(actions).unsqueeze(1).to(self.device)
-        # rewards = torch.Tensor(rewards).unsqueeze(1).to(self.device)
-        # dones = torch.FloatTensor(dones).unsqueeze(1).to(self.device)
-    
-        # # compute loss & optimize model
-        # # next states are relevant only if game isn't done
-        # with torch.no_grad():
-        #     next_q_vals = self.target_model(next_states)
-        #     y = rewards + (1 - dones) * self.gamma * torch.max(next_q_vals, dim=1, keepdim=True)[0]
-        #     # x = self.model(states).gather(1, actions.long())
-        #     # # print(y, x)
-        
-        # loss = F.mse_loss(self.model(states).gather(1, actions.long()), y)
-
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -186,12 +165,7 @@ class DQNAgent:
         # input()
 
     def update_epsilon(self):
-        # epsilon逐渐减小
-        # if self.epsilon > self.epsilon_min:
-        #     self.epsilon *= self.epsilon_decay
-        # else:
-        #     self.epsilon = self.epsilon_min
-        
+        # epsilon逐渐减小        
         if self.epsilon > self.epsilon_min:
             self.epsilon -= (self.epsilon_max - self.epsilon_min) / 10000
             if self.epsilon < self.epsilon_min:
@@ -217,8 +191,6 @@ class DQNAgent:
                     index = int(np.log2(state[i][j]))
                     result[index][i][j] = 1.0
 
-        # print("re:",result)
-        # input()
         return result
     
     def _can_perform(self, action, board):

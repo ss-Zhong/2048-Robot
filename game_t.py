@@ -13,12 +13,12 @@ class Game2048Env:
         self.add_new_tile()
         self.add_new_tile()
 
-        # self.weights = np.array([
-        #     [255, 127, 63, 63],
-        #     [11, 15, 17, 19],
-        #     [0, 0, 0, 0],
-        #     [-3, -5, -7, -9]
-        # ])
+        self.weights = np.array([
+            [8, 4, 2, 2],
+            [1, 1, 1, 1],
+            [0, 0, 0, 0],
+            [-1, -2, -3, -4]
+        ])
 
     def add_new_tile(self):
         empty_cells = list(zip(*np.where(self.board == 0)))
@@ -67,26 +67,6 @@ class Game2048Env:
                 if self.board[j][i] == self.board[j + 1][i]:
                     return False
         return True
-    
-    # def _can_perform(self, action):
-    #     tmp = np.rot90(self.board, action)
-    #     for i in range(4):
-    #         empty = False
-    #         for j in range(4):
-    #             empty |= tmp[i, j] == 0
-    #             if tmp[i, j] != 0 and empty:
-    #                 return True
-    #             if j > 0 and tmp[i, j] != 0 and tmp[i, j] == tmp[i, j-1]:
-    #                 return True
-    #     return False
-    
-    # # returns a list of all possible actions
-    # def possible_actions(self):
-    #     res = []
-    #     for action in range(4):
-    #         if self._can_perform(action):
-    #             res.append(action)
-    #     return res
         
     def step(self, action):
         prev_board = np.copy(self.board)
@@ -94,17 +74,12 @@ class Game2048Env:
         # 0: left 1: up 2: right 3: down
         reward = self.move(action)
 
-        if np.array_equal(prev_board, self.board):
-            # reward -= 10  # 惩罚无效动作
-            pass
-        else:
+        if np.array_equal(prev_board, self.board) == False:
             self.add_new_tile()
 
         self.done = self.is_game_over()
-        # if self.done:
-        #     reward -= 100
+        reward = self.get_reward()
 
-        reward = self.count_zero()
         return self.board, reward, self.done
 
     def get_board(self):
@@ -121,5 +96,14 @@ class Game2048Env:
     def render(self):
         print(self.board)
 
-    def count_zero(self):
-        return np.sum(self.board == 0)
+    def get_reward(self):
+        reward = np.sum(self.board == 0)
+        # reward += np.sum(self.weights * self.preprocess_state(self.board)) / 5
+        # print(reward)
+
+        return reward
+    
+        # 对state进行归一化操作
+    def preprocess_state(self, state):
+        state = np.where(state == 0, 1, state)
+        return np.log2(state)

@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Parameters for Training 2048 Bot')
     parser.add_argument('--epoch_num', type=int, default=10000, help='num of epoch')
-    parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate')
+    parser.add_argument('--learning_rate', type=float, default=1e-5, help='learning rate')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size')
     parser.add_argument('--update_target_frequency', type=int, default=10, help='update target frequency')
     parser.add_argument('--save_model_frequency', type=int, default=1000, help='save model frequency')
@@ -68,7 +68,7 @@ if __name__ == "__main__":
 
     env = Game2048Env()
     agent = DQNAgent(input_size = 4, output_size = 4, device = device,
-                     batch_size=args.batch_size, learning_rate=1e-4, 
+                     batch_size=args.batch_size, learning_rate=args.learning_rate, 
                      update_target_frequency = args.update_target_frequency)
     if args.model_path is not None:
         agent.load_state_dict(torch.load(args.model_path))
