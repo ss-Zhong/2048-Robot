@@ -67,26 +67,6 @@ class Game2048Env:
                 if self.board[j][i] == self.board[j + 1][i]:
                     return False
         return True
-    
-    # def _can_perform(self, action):
-    #     tmp = np.rot90(self.board, action)
-    #     for i in range(4):
-    #         empty = False
-    #         for j in range(4):
-    #             empty |= tmp[i, j] == 0
-    #             if tmp[i, j] != 0 and empty:
-    #                 return True
-    #             if j > 0 and tmp[i, j] != 0 and tmp[i, j] == tmp[i, j-1]:
-    #                 return True
-    #     return False
-    
-    # # returns a list of all possible actions
-    # def possible_actions(self):
-    #     res = []
-    #     for action in range(4):
-    #         if self._can_perform(action):
-    #             res.append(action)
-    #     return res
         
     def step(self, action):
         prev_board = np.copy(self.board)
