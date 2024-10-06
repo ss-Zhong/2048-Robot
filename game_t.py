@@ -8,6 +8,7 @@ class Game2048Env:
     def __init__(self, size=4):
         self.size = size
         self.score = 0
+        self.pre_score = 0
 
         self.board = np.zeros((self.size, self.size), dtype=int)
         self.add_new_tile()
@@ -125,9 +126,16 @@ class Game2048Env:
         return board, rotate, transpose
 
     def get_reward(self):
-        reward = np.sum(self.board == 0)
+        reward = np.sum(self.board == 0) / 2
+        delta_score = self.score - self.pre_score
+        if delta_score > 0:
+            reward += np.log2(delta_score) / 2
+            self.pre_score = self.score
+        else:
+            reward += 0
+        
         # board_, _, _ = self.rearrange_board(self.board)
-        # reward += np.sum(self.weights * self.preprocess_state(board_)) / 5
+        # reward += np.sum(self.weights * self.preprocess_state(board_)) / 10
         # print(reward)
 
         return reward

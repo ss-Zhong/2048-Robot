@@ -1,3 +1,4 @@
 /model/*.pth
 /back
 /__pycache__
+/wandb

@@ -8,6 +8,7 @@ from tqdm import tqdm
 import argparse
 import time
 import random
+import wandb
 
 def train(env, agent, args):
     
@@ -15,34 +16,33 @@ def train(env, agent, args):
         state = env.reset()
         state = agent.one_hot_encode(state) # 对 state 进行归一化
         done = False
-        total_reward = 0
 
         step_num = 0
         while not done:
             
             action = agent.act(env.board)
-            # print(action, end='')
             next_state, reward, done = env.step(action)
             next_state = agent.one_hot_encode(next_state) # 对 next_state 进行归一化
             agent.store_transition(state, action, reward, next_state, done)
 
             agent.train()
-            # env.render()
-            # input()
             state = next_state
-            total_reward += reward
             step_num += 1
 
-            # if done:
-            #     print(f"[Episode {episode + 1}/{args.epoch_num}] Epsilon: {agent.epsilon:.8f}, \tTotal Reward: {total_reward}")
+            wandb.log({"reward": reward})
 
-        if episode % args.save_model_frequency == 0 and episode != 0:
+
+        if (episode+1) % args.save_model_frequency == 0:
             time_ = time.strftime('%Y%m%d_%H%M', time.localtime(time.time()))
-            torch.save(agent.model.state_dict(), f"./model/bot_2048_E{episode}_T{time_}.pth")
+            torch.save(agent.model.state_dict(), f"./model/bot_2048_E{episode+1}_T{time_}.pth")
         
-        if episode % 100 == 0:
+        if (episode+1) % 10 == 0:
             env.render()
-            print(f'episode {episode} | score {env.score} | steps {step_num} | epsilon {agent.epsilon} | lr {agent.scheduler.get_last_lr()[0]}')
+            agent.avg_loss = agent.avg_loss / agent.step_total
+            print(f'episode {episode} | score {env.score} | steps {step_num} | epsilon {agent.epsilon} | lr {agent.scheduler.get_last_lr()[0]} | loss {agent.avg_loss}')
+            wandb.log({"score": env.score, "lr": agent.scheduler.get_last_lr()[0], "loss": agent.avg_loss, "step": agent.step_total})
+            agent.avg_loss = 0
+            agent.step_total = 0
 
         agent.scheduler.step()
 
@@ -59,8 +59,8 @@ if __name__ == "__main__":
     # set_seed(0)
 
     parser = argparse.ArgumentParser(description='Parameters for Training 2048 Bot')
-    parser.add_argument('--epoch_num', type=int, default=10000, help='num of epoch')
-    parser.add_argument('--learning_rate', type=float, default=1e-5, help='learning rate')
+    parser.add_argument('--epoch_num', type=int, default=3000, help='num of epoch')
+    parser.add_argument('--learning_rate', type=float, default=1e-4, help='learning rate')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size')
     parser.add_argument('--update_target_frequency', type=int, default=10, help='update target frequency')
     parser.add_argument('--save_model_frequency', type=int, default=1000, help='save model frequency')
@@ -69,6 +69,18 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     device = torch.device(f"cuda:{args.gpu_id}" if torch.cuda.is_available() else "cpu")
+
+    wandb.init(
+        # set the wandb project where this run will be logged
+        project="2048-robot",
+
+        # track hyperparameters and run metadata
+        config={
+        "learning_rate": args.learning_rate,
+        "architecture": "DQN",
+        "epochs": args.epoch_num,
+        }
+    )
 
     env = Game2048Env()
     agent = DQNAgent(input_size = 4, output_size = 4, device = device,
@@ -79,3 +91,5 @@ if __name__ == "__main__":
         agent.load_state_dict(torch.load(args.model_path))
 
     train(env, agent, args)
+
+    wandb.finish()

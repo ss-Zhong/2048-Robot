@@ -51,9 +51,9 @@ class DQN(nn.Module):
         
         # Fully connected layers
         self.fc = nn.Sequential(
-            nn.Linear(self.fc_input_dim, 256),
+            nn.Linear(self.fc_input_dim, 512),
             nn.ReLU(),
-            nn.Linear(256, 4)
+            nn.Linear(512, 4)
         )
 
     def forward(self, x):
@@ -108,6 +108,8 @@ class DQNAgent:
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
         self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.8)
 
+        self.avg_loss = 0
+
     # 保存过去状态
     def store_transition(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -146,7 +148,6 @@ class DQNAgent:
         
         self.step_total += 1
         if self.step_total % self.update_target_frequency == 0:
-            self.step_total = 0
             self.update_target_model()
 
         # 从memory中采样一个batch
@@ -166,6 +167,7 @@ class DQNAgent:
         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
 
         loss = F.mse_loss(q_values.squeeze(), target_q_values)
+        self.avg_loss += loss
 
         self.optimizer.zero_grad()
         loss.backward()
