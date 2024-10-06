@@ -1,4 +1,5 @@
 import torch
+import torch.optim as optim
 import numpy as np
 from game import Game2048GUI
 from game_t import Game2048Env
@@ -26,7 +27,8 @@ def train(env, agent, args):
             agent.store_transition(state, action, reward, next_state, done)
 
             agent.train()
-
+            # env.render()
+            # input()
             state = next_state
             total_reward += reward
             step_num += 1
@@ -40,7 +42,9 @@ def train(env, agent, args):
         
         if episode % 100 == 0:
             env.render()
-            print(f'episode {episode} | score {env.score} | steps {step_num} | epsilon {agent.epsilon}')
+            print(f'episode {episode} | score {env.score} | steps {step_num} | epsilon {agent.epsilon} | lr {agent.scheduler.get_last_lr()[0]}')
+
+        agent.scheduler.step()
 
 def set_seed(seed):
     random.seed(seed)  # 固定 Python 随机种子
@@ -69,7 +73,8 @@ if __name__ == "__main__":
     env = Game2048Env()
     agent = DQNAgent(input_size = 4, output_size = 4, device = device,
                      batch_size=args.batch_size, learning_rate=args.learning_rate, 
-                     update_target_frequency = args.update_target_frequency)
+                     update_target_frequency = args.update_target_frequency,
+                     )
     if args.model_path is not None:
         agent.load_state_dict(torch.load(args.model_path))
 

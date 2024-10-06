@@ -96,7 +96,7 @@ class DQNAgent:
         self.target_model.load_state_dict(self.model.state_dict())
         self.target_model.eval()
 
-        self.memory = deque(maxlen=10000) #################################50000
+        self.memory = deque(maxlen=50000) #################################50000
         self.gamma = 0.99  # 折扣因子
         self.epsilon = epsilon  # 探索率
         self.epsilon_max = epsilon
@@ -106,6 +106,7 @@ class DQNAgent:
         self.step_total = 0
         self.update_target_frequency = update_target_frequency
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
+        self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.8)
 
     # 保存过去状态
     def store_transition(self, state, action, reward, next_state, done):
@@ -114,20 +115,29 @@ class DQNAgent:
     # agent 执行一步
     def act(self, board):
 
-        state = self.one_hot_encode(board)
-        possible_actions = self.possible_actions(board)
-
+        # random
         if random.random() <= self.epsilon:
+            possible_actions = self.possible_actions(board)
             return random.choice(possible_actions)  # 随机动作：上、下、左、右
-        state = torch.FloatTensor(state).to(self.device)
-        q_values = self.model(state)
-
-        # print(q_values)
-        actions = q_values.argsort()[0].cpu().numpy()[::-1]
-        for action in actions:
-            if action in possible_actions:
-                return action
         
+        # model act
+        else:
+            # board, rotate, transpose = self.rearrange_board(board)
+
+            state = self.one_hot_encode(board)
+            state = torch.FloatTensor(state).to(self.device)
+            q_values = self.model(state)
+
+            possible_actions = self.possible_actions(board)
+            actions = q_values.argsort()[0].cpu().numpy()[::-1]
+            for action in actions:
+                if action in possible_actions:
+                    # if transpose:
+                    #     dic = {0:1, 1:0, 2:3, 3:2}
+                    #     action = dic[action]
+                    # action = (action + rotate) % 4
+                    return action
+            
         return ValueError()
 
     def train(self):
@@ -212,3 +222,31 @@ class DQNAgent:
             if self._can_perform(action, board):
                 res.append(action)
         return res
+
+    def rearrange_board(self, board):
+        # print("Former\n", board)
+
+        blocks = {
+            0: board[0:2, 0:2],
+            1: board[0:2, 2:4],
+            2: board[2:4, 2:4],
+            3: board[2:4, 0:2]
+        }
+        sums = {key: np.sum(block) for key, block in blocks.items()}
+
+        # Step 2: 按照块的总和对块进行排序
+        sorted_blocks = sorted(sums.items(), key=lambda x: x[1], reverse=True)
+        rotate = sorted_blocks[0][0] # 第一
+        second_block_key = sorted_blocks[1][0]
+        third_block_key = sorted_blocks[2][0]
+
+        if rotate != 0:
+            board = np.rot90(board, rotate)
+            second_block_key = (second_block_key - rotate) % 4
+            third_block_key = (third_block_key - rotate) % 4
+        
+        transpose = (second_block_key == 2 and third_block_key == 3) or second_block_key == 3
+        if transpose:
+            board = np.transpose(board)
+        # print("After\n", board)
+        return board, rotate, transpose

@@ -96,9 +96,38 @@ class Game2048Env:
     def render(self):
         print(self.board)
 
+    def rearrange_board(self, board):
+        # print("Former\n", board)
+
+        blocks = {
+            0: board[0:2, 0:2],
+            1: board[0:2, 2:4],
+            2: board[2:4, 2:4],
+            3: board[2:4, 0:2]
+        }
+        sums = {key: np.sum(block) for key, block in blocks.items()}
+
+        # Step 2: 按照块的总和对块进行排序
+        sorted_blocks = sorted(sums.items(), key=lambda x: x[1], reverse=True)
+        rotate = sorted_blocks[0][0] # 第一
+        second_block_key = sorted_blocks[1][0]
+        third_block_key = sorted_blocks[2][0]
+
+        if rotate != 0:
+            board = np.rot90(board, rotate)
+            second_block_key = (second_block_key - rotate) % 4
+            third_block_key = (third_block_key - rotate) % 4
+        
+        transpose = (second_block_key == 2 and third_block_key == 3) or second_block_key == 3
+        if transpose:
+            board = np.transpose(board)
+        # print("After\n", board)
+        return board, rotate, transpose
+
     def get_reward(self):
         reward = np.sum(self.board == 0)
-        # reward += np.sum(self.weights * self.preprocess_state(self.board)) / 5
+        # board_, _, _ = self.rearrange_board(self.board)
+        # reward += np.sum(self.weights * self.preprocess_state(board_)) / 5
         # print(reward)
 
         return reward
