@@ -3,9 +3,7 @@
 Play 2048 with DQN
 
 ## Demo
-<div class="video-container">
-  <video src="./img/202410062156.mp4" controls></video>
-</div>
+<video src="./img/202410062156.mp4" controls></video>
 
 ## How to run
 
