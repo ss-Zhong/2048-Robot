@@ -3,7 +3,10 @@
 Play 2048 with DQN
 
 ## Demo
-<video src="./img/202410062156.mp4" controls></video>
+
+<img src="img/README/image-20241030160306990.png" alt="image-20241030160306990" style="zoom: 67%;" />
+
+Demo Video can be seen at /img/demo.mp4
 
 ## How to run
 
