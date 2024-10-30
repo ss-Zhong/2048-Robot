@@ -1,4 +1,4 @@
-/model/*.pth
+/model/bot_2048_*.pth
 /back
 /__pycache__
 /wandb

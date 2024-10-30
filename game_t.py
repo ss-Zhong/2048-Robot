@@ -9,6 +9,8 @@ class Game2048Env:
         self.size = size
         self.score = 0
         self.pre_score = 0
+        self.pre_empty = 16
+        self.prev_board = None
 
         self.board = np.zeros((self.size, self.size), dtype=int)
         self.add_new_tile()
@@ -38,25 +40,22 @@ class Game2048Env:
         return new_board
 
     def merge(self, board):
-        reward = 0
         for i in range(self.size):
             for j in range(self.size - 1):
                 if board[i][j] == board[i][j + 1] and board[i][j] != 0:
                     board[i][j] *= 2
-                    reward += board[i][j]
                     self.score += board[i][j]
                     board[i][j + 1] = 0
-        return board, reward
+        return board
 
     def move(self, action):
         self.board = np.rot90(self.board, action)
 
         self.board = self.compress()
-        self.board, reward = self.merge(self.board)
+        self.board = self.merge(self.board)
         self.board = self.compress()
 
         self.board = np.rot90(self.board, -action)
-        return reward
 
     def is_game_over(self):
         if 0 in self.board:
@@ -70,16 +69,19 @@ class Game2048Env:
         return True
         
     def step(self, action):
-        prev_board = np.copy(self.board)
+        self.prev_board = np.copy(self.board)
 
         # 0: left 1: up 2: right 3: down
-        reward = self.move(action)
-
-        if np.array_equal(prev_board, self.board) == False:
+        self.move(action)
+        
+        return self.board
+    
+    def step_tile(self):
+        if np.array_equal(self.prev_board, self.board) == False:
             self.add_new_tile()
 
         self.done = self.is_game_over()
-        reward = self.get_reward()
+        reward = self.get_reward(self.done)
 
         return self.board, reward, self.done
 
@@ -125,14 +127,21 @@ class Game2048Env:
         # print("After\n", board)
         return board, rotate, transpose
 
-    def get_reward(self):
-        reward = np.sum(self.board == 0) / 2
+    def get_reward(self, done, scale = 2):
+        
+        now_empty = np.sum(self.board == 0)
+        reward = now_empty / scale
+        # self.pre_empty = now_empty
+
         delta_score = self.score - self.pre_score
         if delta_score > 0:
-            reward += np.log2(delta_score) / 2
+            reward += np.log2(delta_score) / scale
             self.pre_score = self.score
         else:
             reward += 0
+
+        # if self.done:
+        #     reward -= 50 / scale
         
         # board_, _, _ = self.rearrange_board(self.board)
         # reward += np.sum(self.weights * self.preprocess_state(board_)) / 10

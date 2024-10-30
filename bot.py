@@ -36,20 +36,22 @@ class Bot2048:
             # if over == 1:
             #     print(f"{direction}  ", end='')
 
-            time.sleep(0.01)  # 让机器人慢一点，每半秒移动一次
+            time.sleep(0.001)  # 让机器人慢一点，每半秒移动一次
         print("GAME OVER", end='')
 
 def start_bot(game, AI = True):
     """启动机器人线程"""
     if AI:
-        agent = DQNAgent(input_size = 4, output_size = 4, epsilon = 0)
-        agent.model.load_state_dict(torch.load("./model/bot_2048_E2000_T20241006_1411.pth"))
+        agent = DQNAgent(input_size = 4, output_size = 4, epsilon = 0, model_path="./model/bot_final.pth")
+        # agent.model.load_state_dict(torch.load("./model/bot_2048_E1000_T20241017_1317.pth"))
         agent.model.eval()
     else:
         agent = None
 
     bot = Bot2048(game, agent = agent)
-    bot.play()
+    while True:
+        bot.play()
+        input()
 
 if __name__ == "__main__":
     game = Game2048GUI()  # 创建游戏实例

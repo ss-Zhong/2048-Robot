@@ -6,39 +6,18 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 
-# class DQN(nn.Module):
-#     def __init__(self, input_size = 4, output_size = 4): 
-#         super(DQN, self).__init__()
-#         self.input_size = input_size
-#         self.conv1 = nn.Conv2d(16, 64, kernel_size=2, stride=1)
-#         self.conv2 = nn.Conv2d(64, 128, kernel_size=2, stride=1)
-#         self.fc1 = nn.Linear(128 * 2 * 2, 128)
-#         self.fc2 = nn.Linear(128, output_size)
-
-#     def forward(self, x):
-#         # Ensure input is 4D, if less than 4D, unsqueeze to add dimensions
-#         while x.dim() < 4:
-#             x = x.unsqueeze(0)  # Add a dimension at the front
-
-#         x = F.relu(self.conv1(x))
-#         x = F.relu(self.conv2(x))
-#         x = x.view(x.size(0), -1)  # 展平
-#         x = F.relu(self.fc1(x))
-#         x = self.fc2(x)
-#         return x
-
 class DQN(nn.Module):
     '''
     Optimized DQN model class:
         - Contains convolution layers and fully connected layers.
         - Returns Q-values for each of the 4 actions (L, U, R, D).
     '''
-    def __init__(self):
+    def __init__(self, in_channel):
         super(DQN, self).__init__()
         
         # First layer convolutional layers
-        self.conv1 = nn.Conv2d(16, 128, kernel_size=(1,2))
-        self.conv2 = nn.Conv2d(16, 128, kernel_size=(2,1))
+        self.conv1 = nn.Conv2d(in_channel, 128, kernel_size=(1,2))
+        self.conv2 = nn.Conv2d(in_channel, 128, kernel_size=(2,1))
 
         # Second layer convolutional layers
         self.conv11 = nn.Conv2d(128, 128, kernel_size=(1,2))
@@ -81,32 +60,82 @@ class DQN(nn.Module):
 
         # Concatenate all flattened outputs
         concat = torch.cat((x1, x2, x11, x12, x21, x22), dim=1)
+
+        output = self.fc(concat)
         
         # Pass through fully connected layers to get Q-values
-        return self.fc(concat)
+        return output
+
+# class DQN(nn.Module):
+#     '''
+#     Optimized DQN model for 2048 game:
+#         - Uses convolution layers for feature extraction.
+#         - Fully connected layers for Q-value prediction for each action (L, U, R, D).
+#     '''
+#     def __init__(self, in_channel):
+#         super(DQN, self).__init__()
+        
+#         # 第一层卷积层 (输入为 one-hot 编码的通道数)
+#         self.conv1 = nn.Conv2d(in_channel, 128, kernel_size=3, padding=1)
+#         self.conv2 = nn.Conv2d(128, 256, kernel_size=3, padding=1)
+#         self.conv3 = nn.Conv2d(256, 512, kernel_size=3, padding=1)
+        
+#         # 计算展平后的维度
+#         self.fc_input_dim = 4 * 4 * 512  # 假设输入为 4x4 网格，卷积层输出通道为 512
+        
+#         # 全连接层
+#         self.fc = nn.Sequential(
+#             nn.Linear(self.fc_input_dim, 512),
+#             nn.LeakyReLU(),  # 使用 LeakyReLU 代替 ReLU
+#             nn.Linear(512, 4)  # 输出 4 个 Q 值，对应4个动作 (L, U, R, D)
+#         )
+
+#     def forward(self, x):
+#         # 确保输入是 4D 张量，如果维度不够，则扩展维度
+#         while x.dim() < 4:
+#             x = x.unsqueeze(0)
+
+#         # 卷积层前向传播
+#         x = F.relu(self.conv1(x))
+#         x = F.relu(self.conv2(x))
+#         x = F.relu(self.conv3(x))
+
+#         # 展平卷积层的输出
+#         x = x.view(x.size(0), -1)
+
+#         # 全连接层前向传播，得到 Q 值
+#         output = self.fc(x)
+
+#         return output
 
 class DQNAgent:
     def __init__(self, input_size, output_size, 
                  epsilon = 0.1, learning_rate = 0.0005, batch_size = 128, 
                  update_target_frequency = 10,
-                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")):
+                 device = torch.device("cuda" if torch.cuda.is_available() else "cpu"),
+                 model_path = None, one_hot_channel = 16):
         self.device = device
-        self.model = DQN().to(self.device)
-        self.target_model = DQN().to(self.device)
+
+        self.model = DQN(one_hot_channel).to(self.device)
+        if model_path:
+            self.model.load_state_dict(torch.load(model_path))
+        self.target_model = DQN(one_hot_channel).to(self.device)
         self.target_model.load_state_dict(self.model.state_dict())
         self.target_model.eval()
 
         self.memory = deque(maxlen=50000) #################################50000
-        self.gamma = 0.99  # 折扣因子
+        self.gamma = 0.995  # 折扣因子
         self.epsilon = epsilon  # 探索率
         self.epsilon_max = epsilon
-        self.epsilon_min = 0.0001
+        self.epsilon_min = 1e-4
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.step_total = 0
+        self.one_hot_channel = one_hot_channel
         self.update_target_frequency = update_target_frequency
         self.optimizer = optim.Adam(self.model.parameters(), lr=self.learning_rate)
-        self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.8)
+        # self.scheduler = optim.lr_scheduler.StepLR(self.optimizer, step_size=100, gamma=0.8)
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, factor=0.8, patience=100, min_lr=1e-7)
 
         self.avg_loss = 0
 
@@ -142,7 +171,7 @@ class DQNAgent:
             
         return ValueError()
 
-    def train(self):
+    def train(self, isDQN = True):
         if len(self.memory) < self.batch_size:
             return
         
@@ -163,10 +192,25 @@ class DQNAgent:
 
         # Q值计算与更新
         q_values = self.model(states).gather(1, actions)
-        next_q_values = self.target_model(next_states).max(1)[0].detach()
+        
+        # rotate = random.randint(1, 3)
+        # states_rotated = torch.rot90(states, k=rotate, dims=(2, 3))
+        # actions_rotated = (actions - rotate) % 4
+        # q_values_rotated = self.model(states_rotated).gather(1, actions_rotated)
+
+        if isDQN:
+            # DQN
+            next_q_values = self.target_model(next_states).max(1)[0].detach()
+        else:
+            # DDQN
+            next_action = self.model(next_states).max(1)[1].unsqueeze(1)
+            next_q_values = self.target_model(next_states).gather(1, next_action).squeeze().detach()
+
         target_q_values = rewards + (1 - dones) * self.gamma * next_q_values
 
-        loss = F.mse_loss(q_values.squeeze(), target_q_values)
+        loss = F.mse_loss(q_values.squeeze(), target_q_values) #+ F.mse_loss(q_values_rotated.squeeze(), target_q_values)
+        # loss /= 2
+        # print("loss:", loss.item(), end='\t')
         self.avg_loss += loss
 
         self.optimizer.zero_grad()
@@ -179,29 +223,46 @@ class DQNAgent:
     def update_epsilon(self):
         # epsilon逐渐减小        
         if self.epsilon > self.epsilon_min:
-            self.epsilon -= (self.epsilon_max - self.epsilon_min) / 10000
+            self.epsilon -= (self.epsilon_max - self.epsilon_min) / 30000
             if self.epsilon < self.epsilon_min:
                 self.epsilon = self.epsilon_min
 
     def update_target_model(self):
         self.target_model.load_state_dict(self.model.state_dict())
 
-    def one_hot_encode(self, state):
+    def one_hot_encode(self, state, avgPos = False):
         '''
         one-hot encode (4, 4) numpy array to (16, 4, 4) numpy array
             - each channel 0..15 is a (4, 4) numpy array,
             - conatins 1's where original grid contains 2^i
             (first channel refers for empty tiles) 
         '''
-        result = np.zeros((16, 4, 4), dtype=np.float32)
+        result = np.zeros((self.one_hot_channel, 4, 4), dtype=np.float32)
+        if avgPos:
+            empty_tiles = np.sum(state == 0)
+            if empty_tiles > 0:
+                possible = 1 / empty_tiles
 
-        for i in range(4):
-            for j in range(4):
-                if state[i][j] == 0:
-                    result[0][i][j] = 1.0
-                else:
-                    index = int(np.log2(state[i][j]))
-                    result[index][i][j] = 1.0
+            for i in range(4):
+                for j in range(4):
+                    if state[i][j] == 0:
+                        result[0][i][j] = 1.0 - possible
+                        result[1][i][j] = possible * 0.9 # 0.9概率出现2
+                        result[2][i][j] = possible * 0.1 # 0.9概率出现4
+
+                    else:
+                        index = int(np.log2(state[i][j]))
+                        result[index][i][j] = 1.0
+
+        else:
+            for i in range(4):
+                for j in range(4):
+                    if state[i][j] == 0:
+                        result[0][i][j] = 1.0
+
+                    else:
+                        index = int(np.log2(state[i][j]))
+                        result[index][i][j] = 1.0
 
         return result
     

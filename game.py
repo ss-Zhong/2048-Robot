@@ -95,6 +95,8 @@ class Game2048GUI:
         return (changeornot1 or changeornot2 or changeornot3)
 
     def is_game_over(self):
+        # if 2048 in self.board:
+        #     return True
         if 0 in self.board:
             return False
         for i in range(self.size):
@@ -104,6 +106,14 @@ class Game2048GUI:
                 if self.board[j][i] == self.board[j + 1][i]:
                     return False
         return True
+    
+    def init_game(self):
+        self.board = np.zeros((self.size, self.size), dtype=int)
+        self.score = 0
+        self.add_new_tile()
+        self.add_new_tile()
+        self.update_gui()
+
 
     def update_gui(self):
         for i in range(self.size):
@@ -117,7 +127,7 @@ class Game2048GUI:
                     else:
                         self.cells[i][j].config(text=str(value), fg="#776e65", bg=self.get_color(value))
 
-        self.score_label.config(text=f"Score: {self.score}")
+        self.score_label.config(text=f"Score: {self.score}", fg="#fff")
 
     def get_color(self, value):
         colors = {
@@ -133,6 +143,7 @@ class Game2048GUI:
         self.step(key)
 
     def step(self, direction):
+        changeornot = False
         """机器人通过这个函数发送移动指令"""
         if direction == "Up" or direction == "w":
             changeornot = self.move(1)
@@ -152,7 +163,12 @@ class Game2048GUI:
                     self.root.quit()
                 else:
                     self.show_game_over()
+                    # print("If input s End Game")
+                    # ii = input()
+                    # if ii == 's':
                     return 0 # 结束
+                    # else:
+                    #     self.init_game()
             
             return 1 # 继续
         else:
@@ -171,8 +187,13 @@ class Game2048GUI:
         # game_over_frame.place(relx=0.5, rely=0.5, anchor="center")
         # game_over_label = tk.Label(game_over_frame, text="Game Over", font=("Times New Roman", 24), fg="#776e65", bg="#e2d6c9")
         # game_over_label.pack()
-        self.score_label.config(text=f"Score: {self.score}", fg="#ff0000")
+            
+        # if 2048 in self.board:
+        #     self.score_label.config(text=f"You Win!!!", fg="#f54764")
+        # else:
+        self.score_label.config(text=f"Score: {self.score}", fg="#f54764")
 
 if __name__ == "__main__":
+    
     game = Game2048GUI(4)
     game.start()  # 使用 start 方法启动游戏
