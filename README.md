@@ -10,7 +10,7 @@ Play the game **2048** using a Deep Q-Network (DQN) agent.
 ## 🕹️Demo
 
 <p align="center">
-  <img src="img/README/demo.gif" alt="demo" width="80%">
+  <img src="img/README/demo.gif" alt="demo" width="40%">
 </p>
 
 ## 🚀 Getting Started
