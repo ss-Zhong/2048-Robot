@@ -1,4 +1,4 @@
-# 2048-Robot
+# 2048-Robot🤖
 
 ![GitHub stars](https://img.shields.io/github/stars/ss-Zhong/2048-Robot?style=flat&color=5caaf3)
 ![Visits](https://badges.pufler.dev/visits/ss-Zhong/2048-Robot?color=47bdae&label=visits)
@@ -9,7 +9,9 @@ Play the game **2048** using a Deep Q-Network (DQN) agent.
 
 ## 🕹️Demo
 
-![demo](img/README/demo.gif)
+<p align="center">
+  <img src="img/README/demo.gif" alt="demo" width="80%">
+</p>
 
 ## 🚀 Getting Started
 
