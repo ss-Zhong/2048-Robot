@@ -1,23 +1,28 @@
 # 2048-Robot
 
-Play 2048 with DQN
+![GitHub stars](https://img.shields.io/github/stars/ss-Zhong/2048-Robot?style=flat&color=5caaf3)
+![Visits](https://badges.pufler.dev/visits/ss-Zhong/2048-Robot?color=47bdae&label=visits)
+![License](https://img.shields.io/github/license/ss-Zhong/2048-Robot)
+![Last commit](https://img.shields.io/github/last-commit/ss-Zhong/2048-Robot)
 
-## Demo
+Play the game **2048** using a Deep Q-Network (DQN) agent.
 
-<img src="img/README/image-20241030160306990.png" alt="image-20241030160306990" style="zoom: 67%;" />
+## 🕹️Demo
 
-Demo Video can be seen at /img/demo.mp4
+![demo](img/README/demo.gif)
 
-## How to run
+## 🚀 Getting Started
 
-- Train
+- **🔧 Training the Agent**
 
-```bash
-python train.py
-```
+  To train the DQN agent from scratch:
 
-- Run the bot
+    ```bash
+    python train.py
+    ```
 
-```
-python bot.py
-```
+- **🤖 Running the Bot**
+
+    ```
+    python bot.py
+    ```
