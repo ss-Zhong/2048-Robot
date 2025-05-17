@@ -24,7 +24,9 @@ Play the game **2048** using a Deep Q-Network (DQN) agent.
     ```
 
 - **🤖 Running the Bot**
-    We provide the trained model at `/model/bot_final.pth`, which can be used to directly run and observe the bot's performance.
+
+    We provide the trained model at `/model/bot_final.pth`, which can be used to directly run.
+
     ```
     python bot.py
     ```
